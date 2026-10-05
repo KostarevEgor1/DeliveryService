@@ -7,10 +7,14 @@ public enum OrderStatus {
     OUT_FOR_DELIVERY("The order is being delivered"),
     COMPLETED("Order is completed"),
     CANCELLED("Order is cancelled");
-    
+
     OrderStatus(String statusName) {
         this.statusName = statusName;
     }
 
-    String statusName;
+    private final String statusName;
+
+    public String getStatusName() {
+        return statusName;
+    }
 }

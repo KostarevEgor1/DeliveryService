@@ -1,5 +1,7 @@
 package model.delivery;
 
-public interface DeliveryMethod {
+import model.Order;
 
+public interface DeliveryMethod {
+    long calculateCostKopecks(Order order);
 }
