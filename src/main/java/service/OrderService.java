@@ -38,20 +38,12 @@ public class OrderService {
         throw new IllegalArgumentException("Заказ с номером " + number + " не найден");
     }
 
-    public void addOrderItem(int number, OrderItem item) {
-        findOrderByNumber(number).addOrderItem(item);
-    }
-
     public void selectDeliveryMethod(int number, DeliveryMethod deliveryMethod) {
         findOrderByNumber(number).selectDeliveryMethod(deliveryMethod);
     }
 
     public void assignCourier(int number, Courier courier) {
         findOrderByNumber(number).assignCourier(courier);
-    }
-
-    public void changeAddress(int number, Address address) {
-        findOrderByNumber(number).changeAddress(address);
     }
 
     public void changeTipKopecks(int number, long tipKopecks) {

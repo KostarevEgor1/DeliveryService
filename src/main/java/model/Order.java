@@ -9,7 +9,7 @@ import java.util.List;
 public class Order {
     private final Integer number;
     private final Client client;
-    private Address address;
+    private final Address address;
     private final List<OrderItem> orderItems;
     private Courier courier;
     private OrderStatus status;
@@ -104,15 +104,6 @@ public class Order {
         return priceWithDelivery + tipKopecks;
     }
 
-    public void addOrderItem(OrderItem item) {
-        checkEditingAllowed();
-        if (item == null) {
-            throw new IllegalArgumentException("Позиция заказа не должна быть null");
-        }
-
-        orderItems.add(item);
-    }
-
     private void checkEditingAllowed() {
         if (status != OrderStatus.CONFIRMED) {
             throw new IllegalStateException("Невозможно изменить заказ после начала приготовления");
@@ -137,20 +128,6 @@ public class Order {
         if (!deliveryMethod.requiresCourier()) {
             this.courier = null;
         }
-    }
-
-    public void changeAddress(Address address) {
-        checkEditingAllowed();
-
-        if (address == null) {
-            throw new IllegalArgumentException("Новый адрес должен быть указан");
-        }
-
-        if (deliveryMethod != null && deliveryMethod.requiresCourier()) {
-            zoneResolver.resolve(address);
-        }
-
-        this.address = address;
     }
 
     public void changeTipKopecks(long tipKopecks) {
@@ -189,47 +166,42 @@ public class Order {
         this.courier = courier;
     }
 
+    public List<OrderStatus> getAvailableStatuses() {
+        switch (status) {
+            case CONFIRMED -> {
+                if (deliveryMethod == null) {
+                    return List.of(OrderStatus.CANCELLED);
+                }
+                return List.of(OrderStatus.PREPARING, OrderStatus.CANCELLED);
+            }
+            case PREPARING -> {
+                return List.of(OrderStatus.READY);
+            }
+            case READY -> {
+                if (!deliveryMethod.requiresCourier()) {
+                    return List.of(OrderStatus.COMPLETED);
+                }
+                if (courier != null) {
+                    return List.of(OrderStatus.OUT_FOR_DELIVERY);
+                }
+                return List.of();
+            }
+            case OUT_FOR_DELIVERY -> {
+                return List.of(OrderStatus.COMPLETED);
+            }
+            default -> {
+                return List.of();
+            }
+        }
+    }
+
     public void changeStatus(OrderStatus newStatus) {
         if (newStatus == null) {
             throw new IllegalArgumentException("Новый статус должен быть указан");
         }
 
-        boolean transitionAllowed = switch (status) {
-            case CONFIRMED -> newStatus == OrderStatus.PREPARING
-                || newStatus == OrderStatus.CANCELLED;
-
-            case PREPARING -> newStatus == OrderStatus.READY;
-
-            case READY -> newStatus == OrderStatus.OUT_FOR_DELIVERY
-                || newStatus == OrderStatus.COMPLETED;
-
-            case OUT_FOR_DELIVERY -> newStatus == OrderStatus.COMPLETED;
-
-            case COMPLETED, CANCELLED -> false;
-        };
-
-        if (!transitionAllowed) {
+        if (!getAvailableStatuses().contains(newStatus)) {
             throw new IllegalStateException("Недопустимый переход: " + status + " → " + newStatus);
-        }
-
-        if (newStatus == OrderStatus.PREPARING) {
-            if (deliveryMethod == null) {
-                throw new IllegalStateException("Перед приготовлением выберите способ доставки");
-            }
-        }
-
-        if (newStatus == OrderStatus.OUT_FOR_DELIVERY) {
-            if (!deliveryMethod.requiresCourier()) {
-                throw new IllegalStateException("Самовывоз нельзя передать в доставку");
-            }
-
-            if (courier == null) {
-                throw new IllegalStateException("Перед отправлением назначьте курьера");
-            }
-        }
-
-        if (status == OrderStatus.READY && newStatus == OrderStatus.COMPLETED && deliveryMethod.requiresCourier()) {
-            throw new IllegalStateException("Курьерский заказ сначала нужно передать в доставку");
         }
 
         this.status = newStatus;
