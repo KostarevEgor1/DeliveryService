@@ -43,7 +43,45 @@ public class OrderService {
     }
 
     public void assignCourier(int number, Courier courier) {
-        findOrderByNumber(number).assignCourier(courier);
+        Order order = findOrderByNumber(number);
+
+        if (courier == null) {
+            throw new IllegalArgumentException("Курьер должен быть указан");
+        }
+
+        boolean alreadyAssigned = order.getCourier() != null
+                && order.getCourier().getId().equals(courier.getId());
+
+        if (!alreadyAssigned && isCourierBusy(courier)) {
+            throw new IllegalStateException("Этот курьер уже занят другим заказом");
+        }
+
+        order.assignCourier(courier);
+    }
+
+    public boolean isCourierBusy(Courier courier) {
+        for (Order order : orders) {
+            if (order.getStatus() != OrderStatus.COMPLETED
+                    && order.getStatus() != OrderStatus.CANCELLED
+                    && order.getCourier() != null
+                    && order.getCourier().getId().equals(courier.getId())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public List<Courier> getAvailableCouriers(List<Courier> couriers) {
+        List<Courier> availableCouriers = new ArrayList<>();
+
+        for (Courier courier : couriers) {
+            if (!isCourierBusy(courier)) {
+                availableCouriers.add(courier);
+            }
+        }
+
+        return availableCouriers;
     }
 
     public void changeTipKopecks(int number, long tipKopecks) {

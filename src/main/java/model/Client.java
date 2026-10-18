@@ -12,8 +12,10 @@ public class Client {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Имя клиента не должно быть пустым");
         }
-        if (phone == null || phone.isBlank()) {
-            throw new IllegalArgumentException("Телефон клиента не должен быть пустым");
+        if (phone == null || !phone.matches("(?:\\+7|[78])[0-9]{10}")) {
+            throw new IllegalArgumentException(
+                    "Введите телефон в формате +79991234567, 79991234567 или 89991234567"
+            );
         }
         this.id = id;
         this.name = name;

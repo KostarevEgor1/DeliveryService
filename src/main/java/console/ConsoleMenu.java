@@ -80,9 +80,18 @@ public class ConsoleMenu {
 
     private void createOrder() {
         String name = input.readText("Имя клиента: ");
-        String phone = input.readText("Телефон: ");
+        Client client;
 
-        Client client = new Client(nextClientId, name, phone);
+        while (true) {
+            String phone = input.readText("Телефон (+7, 7 или 8 и ещё 10 цифр, без пробелов): ");
+
+            try {
+                client = new Client(nextClientId, name, phone);
+                break;
+            } catch (IllegalArgumentException exception) {
+                System.out.println("Ошибка: " + exception.getMessage());
+            }
+        }
 
         Address address = null;
 
@@ -231,13 +240,24 @@ public class ConsoleMenu {
             return;
         }
 
-        for (int i = 0; i < couriers.size(); i++) {
-            System.out.println((i + 1) + ". " + couriers.get(i).getName());
+        List<Courier> availableCouriers = orderService.getAvailableCouriers(couriers);
+
+        if (availableCouriers.isEmpty()) {
+            System.out.println("Свободных курьеров сейчас нет.");
+            return;
         }
 
-        int choice = input.readInt("Курьер: ", 1, couriers.size());
+        for (int i = 0; i < availableCouriers.size(); i++) {
+            System.out.println((i + 1) + ". " + availableCouriers.get(i).getName());
+        }
 
-        orderService.assignCourier(number, couriers.get(choice - 1));
+        int choice = input.readInt("Курьер, 0 — назад: ", 0, availableCouriers.size());
+
+        if (choice == 0) {
+            return;
+        }
+
+        orderService.assignCourier(number, availableCouriers.get(choice - 1));
         System.out.println("Курьер назначен.");
     }
 

@@ -8,9 +8,7 @@ public class BasicDeliveryMethod implements DeliveryMethod {
 
     public BasicDeliveryMethod(DeliveryZoneResolver zoneResolver) {
         if (zoneResolver == null) {
-            throw new IllegalArgumentException(
-                    "Компонент определения зоны должен быть указан"
-            );
+            throw new IllegalArgumentException("Компонент определения зоны должен быть указан");
         }
 
         this.zoneResolver = zoneResolver;
